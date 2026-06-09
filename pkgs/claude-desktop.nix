@@ -10,7 +10,24 @@
   makeDesktopItem,
   makeWrapper,
   patchy-cnb,
-  perl
+  perl,
+  # Optional runtime tools, mirroring the optdepends of the AUR
+  # `claude-desktop-bin` package. These are put on the app's PATH so features
+  # that shell out to external programs work out of the box:
+  #   - sqlite:         project detection (detectedProjects); without it the
+  #                     app spams ENOENT into main.log
+  #   - nodejs:         MCP extensions that need a system Node.js
+  #   - Computer Use:   input + screenshots on X11 and Wayland
+  sqlite,
+  nodejs,
+  xdotool,
+  scrot,
+  wmctrl,
+  ydotool,
+  grim,
+  jq,
+  glib,
+  gnome-screenshot
 }: let
   pname = "claude-desktop";
   version = "0.14.10";
@@ -20,6 +37,22 @@
     url = "https://storage.googleapis.com/osprey-downloads-c02f6a0d-347c-492b-a752-3e0651722e97/nest-win-x64/Claude-Setup-x64.exe?v=${version}";
     hash = "sha256-Sn/lvMlfKd7b/utFvCxrkWNDJTug4OOSA4lo9YV8aqk=";
   };
+
+  # Runtime tools added to the app's PATH (see optdepends note above). glib is
+  # included for `gdbus` (Computer Use screenshots on GNOME Wayland).
+  runtimeDeps = [
+    sqlite
+    nodejs
+    xdotool
+    scrot
+    imagemagick
+    wmctrl
+    ydotool
+    grim
+    jq
+    glib
+    gnome-screenshot
+  ];
 in
   stdenvNoCC.mkDerivation rec {
     inherit pname version;
@@ -177,8 +210,9 @@ in
       mkdir -p $out/bin
       makeWrapper ${electron}/bin/electron $out/bin/$pname \
         --add-flags "$out/lib/$pname/app.asar" \
-        --add-flags "--openDevTools" \
-        --add-flags "\''${NIXOS_OZONE_WL:+\''${WAYLAND_DISPLAY:+--ozone-platform-hint=auto --enable-features=WaylandWindowDecorations}}"
+        --add-flags "--class=claude" \
+        --add-flags "\''${NIXOS_OZONE_WL:+\''${WAYLAND_DISPLAY:+--ozone-platform-hint=auto --enable-features=WaylandWindowDecorations}}" \
+        --prefix PATH : ${lib.makeBinPath runtimeDeps}
 
       runHook postInstall
     '';

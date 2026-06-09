@@ -21,6 +21,9 @@
         patchy-cnb = pkgs.callPackage ./pkgs/patchy-cnb.nix {};
         claude-desktop = pkgs.callPackage ./pkgs/claude-desktop.nix {
           inherit patchy-cnb;
+          # Pin Electron to a known-good major (matches the AUR claude-desktop-bin
+          # package) rather than tracking whatever nixpkgs' default `electron` is.
+          electron = pkgs.electron_42;
         };
         claude-desktop-with-fhs = pkgs.buildFHSEnv {
           name = "claude-desktop";
@@ -31,6 +34,9 @@
               openssl
               nodejs
               uv
+              # libsqlite for project detection (detectedProjects); the sqlite3
+              # CLI is also on the app's PATH via the wrapper.
+              sqlite
             ];
           runScript = "${claude-desktop}/bin/claude-desktop";
           extraInstallCommands = ''
