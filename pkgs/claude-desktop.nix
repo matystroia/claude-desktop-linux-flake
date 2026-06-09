@@ -5,7 +5,7 @@
   electron,
   p7zip,
   icoutils,
-  nodePackages,
+  asar,
   imagemagick,
   makeDesktopItem,
   makeWrapper,
@@ -28,7 +28,7 @@ in
 
     nativeBuildInputs = [
       p7zip
-      nodePackages.asar
+      asar
       makeWrapper
       imagemagick
       icoutils
